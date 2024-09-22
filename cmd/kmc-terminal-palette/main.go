@@ -99,11 +99,11 @@ func getPixelMean(pixels []Pixel) Pixel {
 }
 
 func cluster(pixels []Pixel, numberOfClusters int) MeansAndClusters {
-	var dataPoints []Pixel
 	length := len(pixels)
 
 	clusters := make(Clusters, numberOfClusters)
 	means := make([]Pixel, numberOfClusters)
+	dataPoints := make([]Pixel, numberOfClusters)
 
 	// Get starting data points
 	for i := 0; i < numberOfClusters; i++ {
@@ -114,7 +114,7 @@ func cluster(pixels []Pixel, numberOfClusters int) MeansAndClusters {
 
 	// Sort into clusters by initial data points
 	for i := 0; i < length; i++ {
-		var distances []float64
+		distances := make([]float64, numberOfClusters)
 		for j := 0; j < numberOfClusters; j++ {
 			distances = append(distances, getEuclideanDistance(pixels[i], dataPoints[j]))
 		}
