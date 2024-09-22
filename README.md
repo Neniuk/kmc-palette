@@ -8,7 +8,7 @@ Generated colors displayed with both the rgb values, hex color codes and a color
 
 ## Installation
 
-Ready built binaries are available in the bin folder and on the releases page (once available). Download the appropriate version for your OS.
+Ready built binaries are available in the [bin folder](https://github.com/Neniuk/kmc-palette/tree/main/bin) and on the releases page (once available). Download the appropriate version for your OS.
 
 ## Usage/Examples
 
