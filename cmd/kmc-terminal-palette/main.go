@@ -9,6 +9,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"sort"
 )
 
 type Pixel struct {
@@ -76,18 +77,18 @@ func getPixelMean(pixels []Pixel) Pixel {
 		return Pixel{0, 0, 0}
 	}
 
-	var sumRed uint8
-	var sumGreen uint8
-	var sumBlue uint8
+	var sumRed uint32
+	var sumGreen uint32
+	var sumBlue uint32
 	for _, pixel := range pixels {
-		sumRed += pixel.r
-		sumGreen += pixel.g
-		sumBlue += pixel.b
+		sumRed += uint32(pixel.r)
+		sumGreen += uint32(pixel.g)
+		sumBlue += uint32(pixel.b)
 	}
 
-	meanRed := sumRed / uint8(length)
-	meanGreen := sumGreen / uint8(length)
-	meanBlue := sumBlue / uint8(length)
+	meanRed := uint8(sumRed / uint32(length))
+	meanGreen := uint8(sumGreen / uint32(length))
+	meanBlue := uint8(sumBlue / uint32(length))
 
 	meanPixel := Pixel{
 		r: meanRed,
@@ -98,51 +99,63 @@ func getPixelMean(pixels []Pixel) Pixel {
 	return meanPixel
 }
 
+func initializeCentroids(pixels []Pixel, numberOfClusters int) []Pixel {
+	centroids := make([]Pixel, numberOfClusters)
+	for i := 0; i < numberOfClusters; i++ {
+		randomIndex := rand.Intn(len(pixels))
+		centroids[i] = pixels[randomIndex]
+	}
+	return centroids
+}
+
 func cluster(pixels []Pixel, numberOfClusters int) MeansAndClusters {
 	length := len(pixels)
 
 	clusters := make(Clusters, numberOfClusters)
-	means := make([]Pixel, numberOfClusters)
-	dataPoints := make([]Pixel, numberOfClusters)
+	means := initializeCentroids(pixels, numberOfClusters)
 
-	// Get starting data points
-	for i := 0; i < numberOfClusters; i++ {
-		// Generate a random number between 0 and pixels length
-		randomNumber := rand.Intn(length)
-		dataPoints[i] = pixels[randomNumber]
-	}
-
-	// Sort into clusters by initial data points
-	for i := 0; i < length; i++ {
-		distances := make([]float64, numberOfClusters)
-		for j := 0; j < numberOfClusters; j++ {
-			distances = append(distances, getEuclideanDistance(pixels[i], dataPoints[j]))
+	for {
+		// Clear clusters
+		for i := range clusters {
+			clusters[i] = nil
 		}
 
-		nearestDataPoint := getMinimumDistance(distances)
-		clusters[nearestDataPoint] = append(clusters[nearestDataPoint], pixels[i])
-	}
+		// Assign pixels to the nearest mean
+		for i := 0; i < length; i++ {
+			distances := make([]float64, numberOfClusters)
+			for j := 0; j < numberOfClusters; j++ {
+				distances[j] = getEuclideanDistance(pixels[i], means[j])
+			}
 
-	// Get mean pixel/vector
-	for index, cluster := range clusters {
-		means[index] = getPixelMean(cluster)
-	}
-
-	meanClusters := make(Clusters, numberOfClusters)
-	// Sort into clusters by means
-	for i := 0; i < length; i++ {
-		var distances []float64
-		for j := 0; j < numberOfClusters; j++ {
-			distances = append(distances, getEuclideanDistance(pixels[i], means[j]))
+			nearestMean := getMinimumDistance(distances)
+			clusters[nearestMean] = append(clusters[nearestMean], pixels[i])
 		}
 
-		nearestMean := getMinimumDistance(distances)
-		meanClusters[nearestMean] = append(meanClusters[nearestMean], pixels[i])
+		// Calculate new means
+		newMeans := make([]Pixel, numberOfClusters)
+		for i := 0; i < numberOfClusters; i++ {
+			newMeans[i] = getPixelMean(clusters[i])
+		}
+
+		// Check for convergence
+		converged := true
+		for i := 0; i < numberOfClusters; i++ {
+			if newMeans[i] != means[i] {
+				converged = false
+				break
+			}
+		}
+
+		if converged {
+			break
+		}
+
+		means = newMeans
 	}
 
 	var meansAndClusters = MeansAndClusters{
 		means:    means,
-		clusters: meanClusters,
+		clusters: clusters,
 	}
 
 	return meansAndClusters
@@ -198,6 +211,24 @@ func kMeansClustering(numberOfClusters int, attempts int, pixels []Pixel) []Pixe
 	return meanPixels
 }
 
+func rgbToHex(pixel Pixel) string {
+	return fmt.Sprintf("#%02x%02x%02x", pixel.r, pixel.g, pixel.b)
+}
+
+func rgbToAnsiBackground(pixel Pixel) string {
+	return fmt.Sprintf("\033[48;2;%d;%d;%dm", pixel.r, pixel.g, pixel.b)
+}
+
+func sumPixel(pixel Pixel) uint32 {
+	return uint32(pixel.r) + uint32(pixel.g) + uint32(pixel.b)
+}
+
+func sortAscending(pixels []Pixel) {
+	sort.Slice(pixels, func(i, j int) bool {
+		return sumPixel(pixels[i]) < sumPixel(pixels[j])
+	})
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: kmc-terminal-palette <image>")
@@ -220,8 +251,14 @@ func main() {
 	pixels := getPixels(image)
 	palette := kMeansClustering(8, 1, pixels)
 
+	// Sort the palette in ascending order based on the sum of RGB values
+	sortAscending(palette)
+
 	fmt.Println("Palette:")
 	for _, pixel := range palette {
-		fmt.Printf("rgb(%d, %d, %d)\n", pixel.r, pixel.g, pixel.b)
+		rgbStr := fmt.Sprintf("rgb(%3d, %3d, %3d)", pixel.r, pixel.g, pixel.b)
+		hexStr := rgbToHex(pixel)
+		colorBlock := rgbToAnsiBackground(pixel) + "    " + "\033[0m"
+		fmt.Printf("%-20s %-10s %s\n", rgbStr, hexStr, colorBlock)
 	}
 }
