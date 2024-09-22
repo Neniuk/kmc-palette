@@ -1,1 +1,1 @@
-# kmc-terminal-palette
+# kmc-palette
