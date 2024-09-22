@@ -1,7 +1,8 @@
 package kmeans
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 
 	"github.com/Neniuk/kmc-palette/internal/models"
 	"github.com/Neniuk/kmc-palette/internal/utils"
@@ -44,18 +45,18 @@ func HasConverged(oldMeans, newMeans []models.Pixel) bool {
 
 func Cluster(pixels []models.Pixel, numberOfClusters int, maxIterations int) models.MeansAndClusters {
 	means := utils.InitializeRandomCentroids(pixels, numberOfClusters)
-	log.Printf("Means: %v", means)
+	slog.Info("Initial means", slog.Any("means", means))
 
 	for iteration := range maxIterations {
-		log.Printf("Iteration %d: Assigning pixels to clusters...", iteration)
+		fmt.Printf("[%d] Assigning pixels to clusters...\n", iteration)
 
 		clusters := AssignPixelsToClusters(pixels, means, numberOfClusters)
 		newMeans := CalculateNewMeans(clusters, numberOfClusters)
 
-		log.Printf("Iteration %d: means = %v", iteration, newMeans)
+		slog.Info("Iteration means", slog.Int("iteration", iteration), slog.Any("means", newMeans))
 
 		if HasConverged(means, newMeans) {
-			log.Printf("Means have converged.")
+			slog.Info("Means have converged.")
 
 			return models.MeansAndClusters{Means: newMeans, Clusters: clusters}
 		}
@@ -64,7 +65,7 @@ func Cluster(pixels []models.Pixel, numberOfClusters int, maxIterations int) mod
 	}
 
 	// Return the result after maxIterations
-	log.Printf("Means have not converged, exceeded maximum number of iterations.")
+	slog.Info("Means have not converged, exceeded maximum number of iterations.")
 	clusters := AssignPixelsToClusters(pixels, means, numberOfClusters)
 
 	return models.MeansAndClusters{Means: means, Clusters: clusters}

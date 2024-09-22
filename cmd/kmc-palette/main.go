@@ -8,7 +8,7 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/Neniuk/kmc-palette/internal/kmeans"
@@ -22,10 +22,10 @@ const (
 	resetAnsiCode             = "\033[0m"
 )
 
-var errUsage = errors.New("usage: kmc-terminal-palette [-i <number>] <image>")
+var errUsage = errors.New("usage: ./kmc-palette [-i <number>] [-k <number>] [-scv] [-hhp] <filepath-to-image>")
 
 func printPalette(palette []models.Pixel) {
-	fmt.Println("Palette:")
+	fmt.Println("\nPalette:")
 
 	for _, pixel := range palette {
 		rgbStr := fmt.Sprintf("rgb(%3d, %3d, %3d)", pixel.R, pixel.G, pixel.B)
@@ -71,6 +71,12 @@ func separatePalette(palette []models.Pixel) ([]models.Pixel, []models.Pixel) {
 }
 
 func run() error {
+	handlerOpts := &slog.HandlerOptions{
+		Level: slog.LevelError,
+	}
+	logger := slog.New(slog.NewTextHandler(os.Stderr, handlerOpts))
+	slog.SetDefault(logger)
+
 	var iterations int
 	var numberOfClusters int
 	var skipColorVariants bool
@@ -87,43 +93,43 @@ func run() error {
 		return errUsage
 	}
 
-	log.Printf("Number of iterations set to %d", iterations)
-	log.Printf("Number of clusters set to %d", numberOfClusters)
+	slog.Info("Number of iterations set", slog.Int("iterations", iterations))
+	slog.Info("Number of clusters set", slog.Int("clusters", numberOfClusters))
 
 	// Open the image file for reading
 	file, err := os.Open(flag.Args()[0])
 	if err != nil {
+		slog.Error("Error opening file", slog.String("error", err.Error()))
 		return fmt.Errorf("error opening file: %w", err)
 	}
 
 	defer file.Close()
-	log.Printf("Opened file: %s", flag.Args()[0])
+	fmt.Printf("Opened file %s\n", flag.Args()[0])
 
 	// Decode the image
 	image, _, err := image.Decode(file)
 	if err != nil {
+		slog.Error("Error decoding image", slog.String("error", err.Error()))
 		return fmt.Errorf("error decoding image: %w", err)
 	}
 
-	log.Printf("Decoded image: %s", flag.Args()[0])
+	fmt.Println("Image decoded")
 
 	// Get the pixels from the image
 	pixels := utils.GetPixels(image)
-	log.Printf("Pixels fetched: %d", len(pixels))
+	fmt.Printf("Pixels fetched: %d\n", len(pixels))
 
 	// Perform K-means clustering
 	palette := kmeans.KMeansClustering(numberOfClusters, iterations, pixels)
 
 	// Sort the palette in ascending order based on the sum of RGB values
-	log.Printf("Palette ready, sorting...")
+	fmt.Println("Palette ready, sorting...")
 	utils.SortPixelsByBrightness(palette)
 
 	if !skipColorVariants {
 		// Add color variations to the palette
-		log.Printf("Adding color variations...")
+		fmt.Println("Adding color variations...")
 		utils.AddColorVariantsToPalette(&palette)
-	} else {
-		log.Printf("Skipping adding color variations...")
 	}
 
 	// Print the palette
