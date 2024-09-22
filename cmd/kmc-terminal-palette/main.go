@@ -12,6 +12,7 @@ import (
 	"sort"
 )
 
+// Types
 type Pixel struct {
 	r uint8
 	g uint8
@@ -30,6 +31,7 @@ type SmallestTotalClustersVariance struct {
 	meansAndClusters MeansAndClusters
 }
 
+// Utility
 func getPixels(img image.Image) []Pixel {
 	bounds := img.Bounds()
 	width, height := bounds.Dx(), bounds.Dy()
@@ -108,57 +110,36 @@ func initializeCentroids(pixels []Pixel, numberOfClusters int) []Pixel {
 	return centroids
 }
 
-func cluster(pixels []Pixel, numberOfClusters int) MeansAndClusters {
-	length := len(pixels)
-
+func assignPixelsToClusters(pixels []Pixel, means []Pixel, numberOfClusters int) Clusters {
 	clusters := make(Clusters, numberOfClusters)
-	means := initializeCentroids(pixels, numberOfClusters)
 
-	for {
-		// Clear clusters
-		for i := range clusters {
-			clusters[i] = nil
+	for _, pixel := range pixels {
+		distances := make([]float64, numberOfClusters)
+		for j, mean := range means {
+			distances[j] = getEuclideanDistance(pixel, mean)
 		}
-
-		// Assign pixels to the nearest mean
-		for i := 0; i < length; i++ {
-			distances := make([]float64, numberOfClusters)
-			for j := 0; j < numberOfClusters; j++ {
-				distances[j] = getEuclideanDistance(pixels[i], means[j])
-			}
-
-			nearestMean := getMinimumDistance(distances)
-			clusters[nearestMean] = append(clusters[nearestMean], pixels[i])
-		}
-
-		// Calculate new means
-		newMeans := make([]Pixel, numberOfClusters)
-		for i := 0; i < numberOfClusters; i++ {
-			newMeans[i] = getPixelMean(clusters[i])
-		}
-
-		// Check for convergence
-		converged := true
-		for i := 0; i < numberOfClusters; i++ {
-			if newMeans[i] != means[i] {
-				converged = false
-				break
-			}
-		}
-
-		if converged {
-			break
-		}
-
-		means = newMeans
+		nearestMean := getMinimumDistance(distances)
+		clusters[nearestMean] = append(clusters[nearestMean], pixel)
 	}
 
-	var meansAndClusters = MeansAndClusters{
-		means:    means,
-		clusters: clusters,
-	}
+	return clusters
+}
 
-	return meansAndClusters
+func calculateNewMeans(clusters Clusters, numberOfClusters int) []Pixel {
+	newMeans := make([]Pixel, numberOfClusters)
+	for i, cluster := range clusters {
+		newMeans[i] = getPixelMean(cluster)
+	}
+	return newMeans
+}
+
+func hasConverged(oldMeans, newMeans []Pixel) bool {
+	for i := range oldMeans {
+		if oldMeans[i] != newMeans[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func getClusterVariance(cluster []Pixel) float64 {
@@ -178,6 +159,40 @@ func getClusterVariance(cluster []Pixel) float64 {
 
 	variance := sumSquaredDistances / float64(length)
 	return variance
+}
+
+func sumPixel(pixel Pixel) uint32 {
+	return uint32(pixel.r) + uint32(pixel.g) + uint32(pixel.b)
+}
+
+func sortAscending(pixels []Pixel) {
+	sort.Slice(pixels, func(i, j int) bool {
+		return sumPixel(pixels[i]) < sumPixel(pixels[j])
+	})
+}
+
+func rgbToHex(pixel Pixel) string {
+	return fmt.Sprintf("#%02x%02x%02x", pixel.r, pixel.g, pixel.b)
+}
+
+func rgbToAnsiBackground(pixel Pixel) string {
+	return fmt.Sprintf("\033[48;2;%d;%d;%dm", pixel.r, pixel.g, pixel.b)
+}
+
+// Core
+func cluster(pixels []Pixel, numberOfClusters int) MeansAndClusters {
+	means := initializeCentroids(pixels, numberOfClusters)
+
+	for {
+		clusters := assignPixelsToClusters(pixels, means, numberOfClusters)
+		newMeans := calculateNewMeans(clusters, numberOfClusters)
+
+		if hasConverged(means, newMeans) {
+			return MeansAndClusters{means: newMeans, clusters: clusters}
+		}
+
+		means = newMeans
+	}
 }
 
 func kMeansClustering(numberOfClusters int, attempts int, pixels []Pixel) []Pixel {
@@ -209,24 +224,6 @@ func kMeansClustering(numberOfClusters int, attempts int, pixels []Pixel) []Pixe
 
 	meanPixels := smallestTotalClustersVariance.meansAndClusters.means
 	return meanPixels
-}
-
-func rgbToHex(pixel Pixel) string {
-	return fmt.Sprintf("#%02x%02x%02x", pixel.r, pixel.g, pixel.b)
-}
-
-func rgbToAnsiBackground(pixel Pixel) string {
-	return fmt.Sprintf("\033[48;2;%d;%d;%dm", pixel.r, pixel.g, pixel.b)
-}
-
-func sumPixel(pixel Pixel) uint32 {
-	return uint32(pixel.r) + uint32(pixel.g) + uint32(pixel.b)
-}
-
-func sortAscending(pixels []Pixel) {
-	sort.Slice(pixels, func(i, j int) bool {
-		return sumPixel(pixels[i]) < sumPixel(pixels[j])
-	})
 }
 
 func main() {
