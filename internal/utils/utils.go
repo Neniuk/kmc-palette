@@ -68,6 +68,45 @@ func CalculateMeanPixel(pixels []models.Pixel) models.Pixel {
 	}
 }
 
+func GenerateLighterPixelVariant(pixel models.Pixel) models.Pixel {
+	return models.Pixel{
+		R: uint8(math.Min(float64(pixel.R)+30, 255)),
+		G: uint8(math.Min(float64(pixel.G)+30, 255)),
+		B: uint8(math.Min(float64(pixel.B)+30, 255)),
+	}
+}
+
+func GenerateDarkerPixelVariant(pixel models.Pixel) models.Pixel {
+	return models.Pixel{
+		R: uint8(math.Max(float64(pixel.R)-30, 0)),
+		G: uint8(math.Max(float64(pixel.G)-30, 0)),
+		B: uint8(math.Max(float64(pixel.B)-30, 0)),
+	}
+}
+
+// AddColorVariantsToPalette adds lighter or darker variants of the colors to the palette based on brightness.
+func AddColorVariantsToPalette(palette *[]models.Pixel) {
+	originalPalette := *palette
+	newPalette := make([]models.Pixel, 0, len(originalPalette)*2)
+
+	for _, pixel := range originalPalette {
+		brightness := CalculatePixelSum(pixel)
+
+		if brightness < 128 {
+			// Original color is dark, generate a lighter variant
+			lighterPixel := GenerateLighterPixelVariant(pixel)
+			// Add the original and lighter variant to the new palette
+			newPalette = append(newPalette, pixel, lighterPixel)
+		} else {
+			// Original color is light, generate a darker variant
+			darkerPixel := GenerateDarkerPixelVariant(pixel)
+			// Add the original and darker variant to the new palette
+			newPalette = append(newPalette, darkerPixel, pixel)
+		}
+	}
+	*palette = newPalette
+}
+
 func InitializeRandomCentroids(pixels []models.Pixel, numberOfClusters int) []models.Pixel {
 	centroids := make([]models.Pixel, numberOfClusters)
 	for i := 0; i < numberOfClusters; i++ {
