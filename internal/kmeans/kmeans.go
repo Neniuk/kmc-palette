@@ -3,8 +3,8 @@ package kmeans
 import (
 	"log"
 
-	"github.com/Neniuk/kmc-terminal-palette/internal/models"
-	"github.com/Neniuk/kmc-terminal-palette/internal/utils"
+	"github.com/Neniuk/kmc-palette/internal/models"
+	"github.com/Neniuk/kmc-palette/internal/utils"
 )
 
 func AssignPixelsToClusters(pixels []models.Pixel, means []models.Pixel, numberOfClusters int) models.Clusters {

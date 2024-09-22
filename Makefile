@@ -1,5 +1,5 @@
 BINARY_NAME=kmc
-PROJECT_NAME=kmc-terminal-palette
+PROJECT_NAME=kmc-palette
 ARCH=amd64
 ARGS=./test-image.png
 .DEFAULT_GOAL := run

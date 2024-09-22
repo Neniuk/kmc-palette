@@ -11,9 +11,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/Neniuk/kmc-terminal-palette/internal/kmeans"
-	"github.com/Neniuk/kmc-terminal-palette/internal/models"
-	"github.com/Neniuk/kmc-terminal-palette/internal/utils"
+	"github.com/Neniuk/kmc-palette/internal/kmeans"
+	"github.com/Neniuk/kmc-palette/internal/models"
+	"github.com/Neniuk/kmc-palette/internal/utils"
 )
 
 const (

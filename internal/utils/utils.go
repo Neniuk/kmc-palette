@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"sort"
 
-	"github.com/Neniuk/kmc-terminal-palette/internal/models"
+	"github.com/Neniuk/kmc-palette/internal/models"
 )
 
 const (
