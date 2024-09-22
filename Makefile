@@ -1,4 +1,4 @@
-BINARY_NAME=kmc
+BINARY_NAME=kmc-palette
 PROJECT_NAME=kmc-palette
 ARCH=amd64
 ARGS=./test-image.png
