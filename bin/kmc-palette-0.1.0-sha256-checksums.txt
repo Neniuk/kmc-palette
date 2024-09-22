@@ -1,0 +1,3 @@
+cf5180897e0846fa8721f327d468fe76906f4000679bb26e2b30604328069fe7 kmc-palette-0.1.0-linux-amd64
+1b6602b7acf7247798cb09115feb4fffd43f56ea02fd8016c9e04f63b999cc6c kmc-palette-0.1.0-darwin-amd64
+9e85ad453c2668a10bdcf53dd6ecfd0affbc1782390dfab82c2f8b117098a5d8 kmc-palette-0.1.0-windows-amd64.exe
