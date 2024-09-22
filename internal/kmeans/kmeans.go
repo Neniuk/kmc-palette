@@ -15,6 +15,7 @@ func AssignPixelsToClusters(pixels []models.Pixel, means []models.Pixel, numberO
 		for j, mean := range means {
 			distances[j] = utils.CalculateEuclideanDistance(pixel, mean)
 		}
+
 		nearestMean := utils.FindMinimumDistanceIndex(distances)
 		clusters[nearestMean] = append(clusters[nearestMean], pixel)
 	}
@@ -27,6 +28,7 @@ func CalculateNewMeans(clusters models.Clusters, numberOfClusters int) []models.
 	for i, cluster := range clusters {
 		newMeans[i] = utils.CalculateMeanPixel(cluster)
 	}
+
 	return newMeans
 }
 
@@ -36,6 +38,7 @@ func HasConverged(oldMeans, newMeans []models.Pixel) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -43,15 +46,17 @@ func Cluster(pixels []models.Pixel, numberOfClusters int, maxIterations int) mod
 	means := utils.InitializeRandomCentroids(pixels, numberOfClusters)
 	log.Printf("Means: %v", means)
 
-	for i := 0; i < maxIterations; i++ {
-		log.Printf("Iteration %d: Assigning pixels to clusters...", i)
+	for iteration := range maxIterations {
+		log.Printf("Iteration %d: Assigning pixels to clusters...", iteration)
 
 		clusters := AssignPixelsToClusters(pixels, means, numberOfClusters)
 		newMeans := CalculateNewMeans(clusters, numberOfClusters)
-		log.Printf("Iteration %d: means = %v", i, newMeans)
+
+		log.Printf("Iteration %d: means = %v", iteration, newMeans)
 
 		if HasConverged(means, newMeans) {
 			log.Printf("Means have converged.")
+
 			return models.MeansAndClusters{Means: newMeans, Clusters: clusters}
 		}
 
@@ -61,11 +66,13 @@ func Cluster(pixels []models.Pixel, numberOfClusters int, maxIterations int) mod
 	// Return the result after maxIterations
 	log.Printf("Means have not converged, exceeded maximum number of iterations.")
 	clusters := AssignPixelsToClusters(pixels, means, numberOfClusters)
+
 	return models.MeansAndClusters{Means: means, Clusters: clusters}
 }
 
 func KMeansClustering(numberOfClusters int, maxIterations int, pixels []models.Pixel) []models.Pixel {
 	meansAndClusters := Cluster(pixels, numberOfClusters, maxIterations)
 	meanPixels := meansAndClusters.Means
+
 	return meanPixels
 }
