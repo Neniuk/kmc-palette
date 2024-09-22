@@ -18,7 +18,47 @@ import (
 const (
 	defaultNumberOfIterations = 1
 	defaultNumberOfClusters   = 8
+	resetAnsiCode             = "\033[0m"
 )
+
+func printPalette(palette []models.Pixel) {
+	fmt.Println("Palette:")
+	for _, pixel := range palette {
+		rgbStr := fmt.Sprintf("rgb(%3d, %3d, %3d)", pixel.R, pixel.G, pixel.B)
+		hexStr := utils.ConvertRgbToHex(pixel)
+		colorBlock := utils.ConvertRgbToAnsiBackground(pixel) + "    " + resetAnsiCode
+		fmt.Printf("%-20s %-10s %s\n", rgbStr, hexStr, colorBlock)
+	}
+}
+
+func printHorizontalPalette(palette []models.Pixel) {
+	darkerVariants, lighterVariants := separatePalette(palette)
+
+	fmt.Println()
+	for _, pixel := range darkerVariants {
+		colorBlock := utils.ConvertRgbToAnsiBackground(pixel) + "  " + resetAnsiCode
+		fmt.Print(colorBlock)
+	}
+	fmt.Println()
+	for _, pixel := range lighterVariants {
+		colorBlock := utils.ConvertRgbToAnsiBackground(pixel) + "  " + resetAnsiCode
+		fmt.Print(colorBlock)
+	}
+	fmt.Println()
+}
+
+func separatePalette(palette []models.Pixel) ([]models.Pixel, []models.Pixel) {
+	darkerVariants := make([]models.Pixel, 0)
+	lighterVariants := make([]models.Pixel, 0)
+	for i, pixel := range palette {
+		if i%2 == 0 {
+			darkerVariants = append(darkerVariants, pixel)
+		} else {
+			lighterVariants = append(lighterVariants, pixel)
+		}
+	}
+	return darkerVariants, lighterVariants
+}
 
 func main() {
 	var iterations int
@@ -58,6 +98,7 @@ func main() {
 	}
 	log.Printf("Decoded image: %s", flag.Args()[0])
 
+	// Get the pixels from the image
 	pixels := utils.GetPixels(image)
 	log.Printf("Pixels fetched: %d", len(pixels))
 
@@ -76,37 +117,9 @@ func main() {
 		log.Printf("Skipping adding color variations...")
 	}
 
-	fmt.Println("Palette:")
-	for _, pixel := range palette {
-		rgbStr := fmt.Sprintf("rgb(%3d, %3d, %3d)", pixel.R, pixel.G, pixel.B)
-		hexStr := utils.ConvertRgbToHex(pixel)
-		colorBlock := utils.ConvertRgbToAnsiBackground(pixel) + "    " + "\033[0m"
-		fmt.Printf("%-20s %-10s %s\n", rgbStr, hexStr, colorBlock)
-	}
-
+	// Print the palette
+	printPalette(palette)
 	if !hideHorizontalPalette {
-		// Separate the palette into two rows
-		darkerVariants := make([]models.Pixel, 0)
-		lighterVariants := make([]models.Pixel, 0)
-		for i, pixel := range palette {
-			if i%2 == 0 {
-				darkerVariants = append(darkerVariants, pixel)
-			} else {
-				lighterVariants = append(lighterVariants, pixel)
-			}
-		}
-
-		// Print color blocks horizontally
-		fmt.Println()
-		for _, pixel := range darkerVariants {
-			colorBlock := utils.ConvertRgbToAnsiBackground(pixel) + "  " + "\033[0m"
-			fmt.Print(colorBlock)
-		}
-		fmt.Println()
-		for _, pixel := range lighterVariants {
-			colorBlock := utils.ConvertRgbToAnsiBackground(pixel) + "  " + "\033[0m"
-			fmt.Print(colorBlock)
-		}
-		fmt.Println()
+		printHorizontalPalette(palette)
 	}
 }
