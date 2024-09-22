@@ -85,15 +85,13 @@ func main() {
 	}
 
 	if !hideHorizontalPalette {
-		// Separate the palette into darker and lighter variants
+		// Separate the palette into two rows
 		darkerVariants := make([]models.Pixel, 0)
 		lighterVariants := make([]models.Pixel, 0)
 		for i, pixel := range palette {
 			if i%2 == 0 {
 				darkerVariants = append(darkerVariants, pixel)
-				lighterVariants = append(lighterVariants, utils.GenerateLighterPixelVariant(pixel))
 			} else {
-				darkerVariants = append(darkerVariants, utils.GenerateDarkerPixelVariant(pixel))
 				lighterVariants = append(lighterVariants, pixel)
 			}
 		}
