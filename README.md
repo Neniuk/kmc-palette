@@ -17,9 +17,9 @@ Ready built binaries are available on the [releases page](https://github.com/Nen
 ```
 
 ### Flags:  
--i, <number>, number of iterations for K-means clustering  
--k, <number>, number of clusters for K-means clustering  
--scv, skip adding color variants to the palette  
+-i, number of iterations for K-means clustering  (increases accuracy)
+-k, number of clusters for K-means clustering  (increases number of colors)
+-scv, skip adding color variants to the palette  (adds color variations, doubles number of colors)
 -hhp, hide horizontal palette  
 
 
